@@ -37,37 +37,31 @@ router.get('/:pid', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const result = await manager.addProduct(req.body);
+        if (req.io) req.io.emit('updateProducts', await manager.getProducts());
         res.status(201).json(result);
     } catch (err) {
-        res.status(400).json({ error: err.message || "Error al crear producto" });
+        res.status(400).json({ error: err.message });
     }
 });
 
 // PUT: Actualizar
 router.put('/:pid', async (req, res) => {
     try {
-        const success = await manager.updateProduct(Number(req.params.pid), req.body);
-        if (success) {
-            res.json({ message: "Actualizado" });
-        } else {
-            res.status(404).json({ error: "No encontrado" });
-        }
+        await manager.updateProduct(Number(req.params.pid), req.body);
+        res.json({ message: "Actualizado" });
     } catch (err) {
-        res.status(500).json({ error: "Error al actualizar producto" });
+        res.status(500).json({ error: err.message });
     }
 });
 
 // DELETE
 router.delete('/:pid', async (req, res) => {
     try {
-        const success = await manager.deleteProduct(Number(req.params.pid));
-        if (success) {
-            res.json({ message: "Eliminado" });
-        } else {
-            res.status(404).json({ error: "No encontrado" });
-        }
+        await manager.deleteProduct(Number(req.params.pid));
+        if (req.io) req.io.emit('updateProducts', await manager.getProducts());
+        res.json({ message: "Eliminado" });
     } catch (err) {
-        res.status(500).json({ error: "Error al eliminar producto" });
+        res.status(500).json({ error: err.message });
     }
 });
 
